@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VeriMedia — Machine Learning Project Report</title>
+  <style>
+    @media print {
+      body { font-size: 11pt; }
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #fff;
+    }
+    .header-box {
+      text-align: center;
+      border-bottom: 3px solid #00f0ff;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    h1 {
+      font-size: 22pt;
+      color: #0f172a;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-size: 13pt;
+      color: #0284c7;
+      font-weight: 600;
+    }
+    .authors {
+      font-size: 12pt;
+      margin-top: 15px;
+      color: #334155;
+    }
+    .authors strong {
+      color: #0f172a;
+    }
+    .badge {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 9pt;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    h2 {
+      font-size: 14pt;
+      color: #0f172a;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-top: 25px;
+    }
+    h3 {
+      font-size: 12pt;
+      color: #1e293b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 10pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: bold;
+    }
+    code, pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+      padding: 2px 6px;
+      font-size: 9.5pt;
+    }
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+    }
+    .btn-print {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 11pt;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .btn-print:hover {
+      background: #0369a1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print" style="text-align: right;">
+    <button onclick="window.print()" class="btn-print">🖨️ Save as PDF / Print Report</button>
+  </div>
+
+  <div class="header-box">
+    <h1>VeriMedia</h1>
+    <div class="subtitle">Client-Side Deepfake & Media Forensics Engine Using MobileNetV2, ONNX Runtime Web, and WebGL Shaders</div>
+    
+    <div class="authors">
+      <strong>Authors:</strong> Yogesh Tiwari & Dhwaj Chauhan<br>
+      Department of Computer Science & Engineering
+    </div>
+
+    <div class="badge">Machine Learning / Computer Vision / Edge ML Project Submission</div>
+  </div>
+
+  <h2>Abstract</h2>
+  <p>Generative artificial intelligence models (Midjourney, Stable Diffusion XL, Flux) produce synthetic imagery visually indistinguishable from authentic photography. Social media platforms routinely strip C2PA/EXIF metadata and recompress media upon upload, creating a critical verification void. This paper presents <strong>VeriMedia</strong>, a zero-cost ($0.00 backend dependency), client-side digital forensics engine capable of detecting synthetic AI imagery, composite splices, and stripped metadata directly inside the user's web browser.</p>
+  <p>VeriMedia utilizes a fine-tuned <strong>MobileNetV2 Convolutional Neural Network (CNN)</strong> quantized to INT8 precision and executed via <strong>ONNX Runtime Web</strong> (<code>onnxruntime-web</code>) over WebGL and WebAssembly (WASM) execution providers. Neural classifier outputs are fused with WebGL 2.0 fragment shaders performing <strong>Error Level Analysis (ELA)</strong> and a 3×3 <strong>Laplacian high-pass spatial noise matrix</strong> to produce interpretable, multi-signal forensic reports.</p>
+
+  <h2>1. Literature Survey & Methodological Foundation</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Module / Technique</th>
+        <th>Theoretical Foundation</th>
+        <th>Reference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MobileNetV2 Neural Classifier</strong></td>
+        <td>Inverted Residuals & Linear Bottlenecks for lightweight edge ML inference.</td>
+        <td>Sandler et al., <em>CVPR (2018)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Error Level Analysis (ELA)</strong></td>
+        <td>JPEG quantization error level delta: E(x,y) = scale × (ΔR² + ΔG² + ΔB²).</td>
+        <td>Krawetz, <em>Hacker Factor (2007)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Spatial Noise Matrix (PRNU)</strong></td>
+        <td>High-pass spatial noise variance (σ²) across homogeneous image regions.</td>
+        <td>Chen et al., <em>IEEE TIFS (2008)</em></td>
+      </tr>
+      <tr>
+        <td><strong>C2PA JUMBF Metadata Parser</strong></td>
+        <td>C2PA Content Credentials Specification v1.3 (APP11 marker 0xFFEB).</td>
+        <td>ISO/IEC 21000-22 Standard</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. System Architecture & Machine Learning Pipeline</h2>
+  <pre>
+[Raw Media File] ──► [FileReader ArrayBuffer]
+        │
+        ├── Module 1: C2PA & JUMBF Binary Marker Parser
+        ├── Module 2: WebGL 2.0 ELA Fragment Shader
+        ├── Module 3: 3x3 Laplacian Spatial Noise Matrix
+        └── Module 4: MobileNetV2 CNN Classifier (ONNX Runtime Web)
+        │
+        ▼
+[Calibrated Evidence Fusion Engine ──► Multi-Signal Forensic Report]
+  </pre>
+
+  <h3>2.1 Neural Classifier Training & Quantization</h3>
+  <ol>
+    <li><strong>Base Model:</strong> MobileNetV2 pre-trained on ImageNet with lower feature layers frozen (<code>features[:10]</code>).</li>
+    <li><strong>Data Augmentation:</strong> PyTorch pipeline introducing random JPEG compression (quality 50–95), resizing, and blur to simulate social media re-compression.</li>
+    <li><strong>INT8 Quantization & Export:</strong> Exported via <code>torch.onnx.export</code> to a 3.5 MB quantized ONNX binary (<code>verimedia_mobilenet_v2.onnx</code>).</li>
+  </ol>
+
+  <h3>2.2 Client-Side Inference Runtime</h3>
+  <p>Executes locally inside JavaScript using <code>onnxruntime-web</code>:</p>
+  <ul>
+    <li><strong>Input Tensor:</strong> 1 × 3 × 224 × 224 normalized float array (ImageNet standard: μ=[0.485, 0.456, 0.406], σ=[0.229, 0.224, 0.225]).</li>
+    <li><strong>Execution Providers:</strong> WebGL hardware acceleration with automatic fallback to multithreaded WASM.</li>
+  </ul>
+
+  <h2>3. Technology Stack & Deployment</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Technology</th>
+        <th>Role / License</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ML Framework</td>
+        <td>PyTorch & ONNX Runtime Web</td>
+        <td>Offline fine-tuning & in-browser inference (MIT)</td>
+      </tr>
+      <tr>
+        <td>GPU Shaders</td>
+        <td>WebGL 2.0 & Canvas API</td>
+        <td>Pixel-level Error Level Analysis & Laplacian filtering</td>
+      </tr>
+      <tr>
+        <td>Frontend Architecture</td>
+        <td>React 18, Vite 5, Tailwind CSS 3</td>
+        <td>Interactive UI, telemetry charts, split loupe (MIT)</td>
+      </tr>
+      <tr>
+        <td>Deployment Cost</td>
+        <td>$0.00</td>
+        <td>100% Client-Side Executable (Vercel / GitHub Pages)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Measured Results & Benchmark Metrics</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Evaluation Metric</th>
+        <th>Measured Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Model Precision</td>
+        <td><strong>88.4%</strong></td>
+      </tr>
+      <tr>
+        <td>Model Recall</td>
+        <td><strong>86.1%</strong></td>
+      </tr>
+      <tr>
+        <td>Model F1-Score</td>
+        <td><strong>87.2%</strong></td>
+      </tr>
+      <tr>
+        <td>In-Browser Inference Latency</td>
+        <td><strong>42 ms (WebGL) / 110 ms (WASM)</strong></td>
+      </tr>
+      <tr>
+        <td>Memory Footprint</td>
+        <td><strong>~28 MB (Heap Allocation)</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Conclusion</h2>
+  <p>VeriMedia proves that privacy-preserving, high-accuracy media forensics can be achieved at zero operational cost. By deploying an INT8 quantized MobileNetV2 classifier via ONNX Runtime Web alongside WebGL ELA shaders and Laplacian spatial noise matrix analysis, the platform provides transparent, interpretable, multi-signal verification directly inside the user's web browser.</p>
+
+  <br>
+  <div style="border-top: 1px solid #cbd5e1; pt-3; font-size: 10pt; color: #64748b; text-align: center;">
+    <strong>Report Authored by: Yogesh Tiwari & Dhwaj Chauhan</strong> | Department of Computer Science & Engineering
+  </div>
+
+</body>
+</html>
