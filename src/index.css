@@ -3,20 +3,19 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background-color: #07090e;
+  background-color: #f4f6f9;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(112, 0, 255, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    linear-gradient(to right, rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
+  color: #0f172a;
 }
 
 /* Custom Scrollbar */
@@ -25,53 +24,43 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0d14;
+  background: #e2e8f0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f293d;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f0ff;
+  background: #1d4ed8;
 }
 
-/* Glassmorphism card */
-.glass-panel {
-  background: rgba(18, 24, 36, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Forensic Card Panel */
+.forensic-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
 }
 
-.glass-panel-glow {
-  background: rgba(18, 24, 36, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
-}
-
-/* Cyber Button Glow */
-.cyber-btn {
-  position: relative;
-  transition: all 0.2s ease-in-out;
-}
-.cyber-btn:hover {
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+.forensic-card-active {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.08), 0 2px 4px -1px rgba(29, 78, 216, 0.04);
 }
 
 /* Range input styling */
 input[type=range] {
   -webkit-appearance: none;
-  background: #1f293d;
+  background: #e2e8f0;
   border-radius: 8px;
-  height: 6px;
+  height: 5px;
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 18px;
-  width: 18px;
+  height: 16px;
+  width: 16px;
   border-radius: 50%;
-  background: #00f0ff;
-  box-shadow: 0 0 10px #00f0ff;
+  background: #1d4ed8;
+  box-shadow: 0 0 6px rgba(29, 78, 216, 0.4);
   cursor: pointer;
 }

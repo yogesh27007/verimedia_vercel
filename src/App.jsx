@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
-import DropZone from './components/DropZone';
+import Sidebar from './components/Sidebar';
 import ForensicViewer from './components/ForensicViewer';
 import ModuleCards from './components/ModuleCards';
 import FusionReport from './components/FusionReport';
@@ -12,8 +12,9 @@ import { analyzeNoisePattern } from './modules/noiseAnalyzer';
 import { classifyAiLikelihood, initOnnxModel } from './modules/aiClassifier';
 import { fuseForensicEvidence } from './modules/fusionEngine';
 import { processVideoFile } from './modules/videoProcessor';
+import { getSampleImages } from './modules/sampleImages';
 
-import { RefreshCw, ShieldCheck, Cpu, ArrowLeft, Film, Video, CheckCircle2, AlertTriangle, XCircle, Download } from 'lucide-react';
+import { Video, Sparkles, UploadCloud } from 'lucide-react';
 
 export default function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -21,6 +22,9 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
   
+  // Navigation active tab
+  const [activeTab, setActiveTab] = useState('ela'); // 'original' | 'ela' | 'noise' | 'ai' | 'split'
+
   // Image analysis states
   const [metadataResult, setMetadataResult] = useState(null);
   const [elaResult, setElaResult] = useState(null);
@@ -35,12 +39,22 @@ export default function App() {
   const [elaScale, setElaScale] = useState(15);
   const [currentImageElement, setCurrentImageElement] = useState(null);
 
-  // Colab Modal state
+  // Colab Modal state & Sample selector modal state
   const [isColabModalOpen, setIsColabModalOpen] = useState(false);
+  const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
 
-  // Pre-initialize ONNX session asynchronously & listen for clipboard Ctrl+V image paste
+  // Hidden File Input Ref for direct sidebar file picker
+  const fileInputRef = useRef(null);
+
+  const sampleImages = getSampleImages();
+
+  // Load default sample image on app load so Dashboard opens DIRECTLY
   useEffect(() => {
     initOnnxModel();
+
+    if (sampleImages && sampleImages[0]) {
+      handleSampleClick(sampleImages[0]);
+    }
 
     const handlePaste = (e) => {
       if (e.clipboardData && e.clipboardData.files && e.clipboardData.files[0]) {
@@ -66,6 +80,27 @@ export default function App() {
     return () => window.removeEventListener('paste', handlePaste);
   }, []);
 
+  const handleSampleClick = async (sample) => {
+    setIsSampleModalOpen(false);
+    const res = await fetch(sample.dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `${sample.id}_sample.jpg`, { type: 'image/jpeg' });
+    handleFileSelected(file);
+  };
+
+  // Trigger native browser file picker directly from Sidebar button
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileInputChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelected(e.target.files[0]);
+    }
+  };
+
   // Handle media file processing pipeline (Images & Videos)
   const handleFileSelected = async (file) => {
     setSelectedFile(file);
@@ -82,12 +117,10 @@ export default function App() {
 
     try {
       if (file.type.startsWith('video/')) {
-        // Run Video Keyframe Forensics
         setProcessingStep('Initializing Client-Side Video Keyframe Extractor...');
         const videoRes = await processVideoFile(file, (stepMsg) => setProcessingStep(stepMsg));
         setVideoResult(videoRes);
       } else {
-        // Run Image Forensics Pipeline
         setProcessingStep('Module 1: Parsing C2PA & JUMBF Binary Metadata...');
         const arrayBuffer = await file.arrayBuffer();
         const metadata = await parseMetadata(file, arrayBuffer);
@@ -138,192 +171,137 @@ export default function App() {
     }
   };
 
-  const handleReset = () => {
-    setSelectedFile(null);
-    setOriginalUrl(null);
-    setMetadataResult(null);
-    setElaResult(null);
-    setNoiseResult(null);
-    setAiResult(null);
-    setFusionResult(null);
-    setVideoResult(null);
-    setCurrentImageElement(null);
+  const handleExportReport = () => {
+    if (fusionResult?.reportExport) {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fusionResult.reportExport, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `VeriMedia_Forensic_Report_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-cyber-dark text-slate-100">
+    <div className="min-h-screen flex flex-col bg-forensic-bg text-forensic-navy font-sans">
       
+      {/* Hidden File Input for Direct File Picker */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime"
+        onChange={handleFileInputChange}
+        className="hidden"
+      />
+
       {/* Top Header */}
       <Header onOpenColabModal={() => setIsColabModalOpen(true)} />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Main Content Area — DIRECT DASHBOARD VIEW ONLY */}
+      <main className="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 py-4 space-y-4">
         
-        {/* Banner Section */}
-        {!selectedFile && (
-          <div className="text-center space-y-3 max-w-3xl mx-auto py-6">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyber-accent/10 border border-cyber-accent/30 text-cyber-accent text-xs font-mono">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>100% Client-Side Executable — Zero Cloud Cost ($0)</span>
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyber-accent bg-clip-text text-transparent">
-              In-Browser Image & Video Forensics Engine
-            </h2>
-
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Detect image & video manipulation, re-compression splices, stripped C2PA metadata, and AI-generated deepfakes directly on your laptop GPU/CPU with zero server roundtrips.
-            </p>
+        {/* Top Sample Test Button Bar */}
+        <div className="flex items-center justify-between bg-white border border-forensic-border p-2.5 rounded-lg text-xs font-mono">
+          <div className="flex items-center space-x-2 text-slate-700">
+            <Sparkles className="w-4 h-4 text-forensic-blue" />
+            <span className="font-bold uppercase tracking-wider">Evaluation Test Suite:</span>
+            <span className="text-slate-500 hidden sm:inline">1-Click Test Scenarios Available</span>
           </div>
-        )}
 
-        {/* Upload Zone / State Selector */}
-        {!selectedFile ? (
-          <DropZone onFileSelected={handleFileSelected} isProcessing={isProcessing} />
-        ) : (
-          /* Active Analysis View */
-          <div className="space-y-8">
-            
-            {/* Top Toolbar Navigation */}
-            <div className="flex items-center justify-between border-b border-cyber-border pb-4">
-              <button
-                onClick={handleReset}
-                className="cyber-btn flex items-center space-x-2 px-4 py-2 rounded-xl bg-cyber-card hover:bg-cyber-border text-slate-300 text-xs font-semibold border border-cyber-border transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Upload Different File</span>
-              </button>
+          <button
+            onClick={() => setIsSampleModalOpen(true)}
+            className="px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-forensic-blue font-bold border border-blue-200 transition-colors uppercase tracking-wider"
+          >
+            Select Test Scenario
+          </button>
+        </div>
 
-              <div className="flex items-center space-x-3 text-xs font-mono text-slate-400">
-                <span>File: <strong className="text-slate-200">{selectedFile.name}</strong></span>
-                <span>•</span>
-                <span>Size: <strong className="text-cyber-accent">{(selectedFile.size / 1024).toFixed(1)} KB</strong></span>
+        {/* Processing Spinner State */}
+        {isProcessing ? (
+          <div className="forensic-card p-12 text-center space-y-4">
+            <div className="w-10 h-10 mx-auto border-3 border-forensic-blue border-t-transparent rounded-full animate-spin" />
+            <div>
+              <h3 className="text-base font-bold text-slate-800 font-mono">{processingStep}</h3>
+              <p className="text-xs text-slate-500 mt-1 font-mono">Executing WebGL shaders & WASM tensors on local GPU...</p>
+            </div>
+          </div>
+        ) : videoResult ? (
+          /* Video Dashboard Result */
+          <div className="space-y-4 animate-fadeIn">
+            <div className="forensic-card p-4 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-forensic-border pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-forensic-blue">
+                    <Video className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-forensic-navy">{videoResult.summaryTitle}</h2>
+                    <p className="text-xs text-slate-500 font-mono">Video Duration: {videoResult.duration}s • {videoResult.sampleCount} Keyframes Sampled</p>
+                  </div>
+                </div>
+
+                <span className={`px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider ${
+                  videoResult.verdictColor === 'red' ? 'bg-red-100 text-red-700 border border-red-200' :
+                  videoResult.verdictColor === 'yellow' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                  'bg-green-100 text-green-700 border border-green-200'
+                }`}>
+                  {videoResult.verdictBadge}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-900 border border-forensic-border">
+                  <video src={videoResult.videoUrl} controls className="w-full h-full object-contain" />
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 border border-forensic-border space-y-3 font-mono text-xs">
+                  <div className="flex justify-between"><span className="text-slate-500">Average AI Likelihood:</span><span className="font-bold text-red-600">{videoResult.avgAiScore}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Average ELA Splice Delta:</span><span className="font-bold text-amber-700">{videoResult.avgElaScore}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Average Noise Variance (σ²):</span><span className="font-bold text-slate-800">{videoResult.avgNoiseVar}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Temporal Jitter Index:</span><span className="font-bold text-forensic-blue">{videoResult.temporalJitterRatio}</span></div>
+                </div>
               </div>
             </div>
+          </div>
+        ) : (
+          /* Active Image Dashboard (DIRECT DASHBOARD VIEW ONLY) */
+          <div className="space-y-4 animate-fadeIn">
+            
+            {/* Top Workspace Row: Sidebar + Evidence Viewer + Evidence Fusion Report */}
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+              
+              {/* Left Toolbox Sidebar */}
+              <Sidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                onUploadClick={handleUploadClick}
+              />
 
-            {/* Processing Spinner Bar */}
-            {isProcessing ? (
-              <div className="glass-panel rounded-2xl p-12 text-center space-y-4">
-                <div className="w-12 h-12 mx-auto border-4 border-cyber-accent border-t-transparent rounded-full animate-spin" />
-                <div>
-                  <h3 className="text-base font-bold text-slate-200">{processingStep}</h3>
-                  <p className="text-xs text-slate-400 mt-1 font-mono">Executing WebGL shaders & WASM tensors on local GPU...</p>
-                </div>
-              </div>
-            ) : videoResult ? (
-              /* Video Analysis Dashboard */
-              <div className="space-y-8 animate-fadeIn">
-                
-                {/* Video Player & Main Verdict Banner */}
-                <div className="glass-panel rounded-2xl p-6 space-y-6">
-                  
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-cyber-border pb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-cyber-accent/20 border border-cyber-accent/40 flex items-center justify-center text-cyber-accent">
-                        <Video className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-extrabold text-slate-100">{videoResult.summaryTitle}</h2>
-                        <p className="text-xs text-slate-400 font-mono">Video Duration: {videoResult.duration}s • {videoResult.sampleCount} Keyframes Sampled</p>
-                      </div>
-                    </div>
+              {/* Center Evidence Canvas Viewer */}
+              <ForensicViewer
+                originalUrl={originalUrl}
+                elaData={elaResult}
+                noiseData={noiseResult}
+                aiData={aiResult}
+                activeTab={activeTab}
+                onScaleChange={handleScaleChange}
+                elaScale={elaScale}
+                onExportReport={handleExportReport}
+              />
 
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-mono font-extrabold tracking-wider uppercase ${
-                      videoResult.verdictColor === 'red' ? 'bg-cyber-red/20 text-cyber-red border border-cyber-red/40' :
-                      videoResult.verdictColor === 'yellow' ? 'bg-cyber-yellow/20 text-cyber-yellow border border-cyber-yellow/40' :
-                      'bg-cyber-green/20 text-cyber-green border border-cyber-green/40'
-                    }`}>
-                      {videoResult.verdictBadge}
-                    </span>
-                  </div>
+              {/* Right Evidence Fusion Report Panel */}
+              <FusionReport fusionData={fusionResult} />
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-                    
-                    {/* HTML5 Video Preview Player */}
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-cyber-border shadow-inner">
-                      <video
-                        src={videoResult.videoUrl}
-                        controls
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
+            </div>
 
-                    {/* Keyframe Forensic Breakdown */}
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-xl bg-cyber-dark/90 border border-cyber-border space-y-3 font-mono text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Average AI Likelihood:</span>
-                          <span className={videoResult.avgAiScore > 50 ? 'text-cyber-red font-bold' : 'text-cyber-green'}>{videoResult.avgAiScore}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Average ELA Splice Delta:</span>
-                          <span className="text-cyber-yellow">{videoResult.avgElaScore}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Average Noise Variance (σ²):</span>
-                          <span className="text-slate-200">{videoResult.avgNoiseVar}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Temporal Jitter / Jitter Index:</span>
-                          <span className="text-cyber-accent">{videoResult.temporalJitterRatio}</span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-slate-400 leading-relaxed bg-cyber-card p-3 rounded-xl border border-cyber-border">
-                        {videoResult.summaryText}
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Keyframe Timeline Thumbnails */}
-                  <div className="space-y-3 border-t border-cyber-border pt-4">
-                    <h4 className="text-xs font-bold font-mono text-slate-300 uppercase tracking-wider">
-                      Extracted Keyframe Forensic Heatmap Samples
-                    </h4>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {videoResult.frameResults.map((frame, idx) => (
-                        <div key={idx} className="glass-panel p-2 rounded-xl space-y-1.5 border border-cyber-border">
-                          <div className="aspect-video rounded overflow-hidden bg-black border border-white/10">
-                            <img src={frame.ela.elaDataUrl} alt={`Frame ${idx}`} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex justify-between items-center text-[10px] font-mono">
-                            <span className="text-slate-400">{frame.time}s</span>
-                            <span className={frame.ai.aiLikelihoodPercent > 50 ? 'text-cyber-pink' : 'text-cyber-green'}>
-                              AI: {frame.ai.aiLikelihoodPercent}%
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-            ) : (
-              /* Image Forensic Dashboard Results */
-              <div className="space-y-8 animate-fadeIn">
-                <ForensicViewer
-                  originalUrl={originalUrl}
-                  elaData={elaResult}
-                  noiseData={noiseResult}
-                  aiData={aiResult}
-                  onScaleChange={handleScaleChange}
-                  elaScale={elaScale}
-                />
-
-                <FusionReport fusionData={fusionResult} />
-
-                <ModuleCards
-                  metadata={metadataResult}
-                  ela={elaResult}
-                  noise={noiseResult}
-                  ai={aiResult}
-                />
-              </div>
-            )}
+            {/* Bottom 4-Module Cards Grid */}
+            <ModuleCards
+              metadata={metadataResult}
+              ela={elaResult}
+              noise={noiseResult}
+              ai={aiResult}
+              onExportReport={handleExportReport}
+            />
 
           </div>
         )}
@@ -331,14 +309,14 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-cyber-border bg-cyber-dark py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
-          <p className="text-xs text-slate-500 font-mono">
-            VeriMedia Capstone Project — 100% Client-Side Image & Video Forensics Engine ($0 Deployment Guarantee)
-          </p>
-          <p className="text-[11px] text-slate-600">
-            Open-Source MIT / Apache 2.0 • WebGL 2.0 • WebAssembly • ONNX Runtime Web • HTML5 Video Frame Extractor
-          </p>
+      <footer className="bg-white border-t border-forensic-border py-3 text-xs font-mono text-slate-500 mt-auto">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
+          <div>© 2026 VeriMedia Forensic Systems</div>
+          <div className="flex items-center space-x-6">
+            <a href="#" className="hover:text-forensic-blue transition-colors">Documentation</a>
+            <a href="#" className="hover:text-forensic-blue transition-colors">Legal</a>
+            <a href="#" className="hover:text-forensic-blue transition-colors">Security Audit</a>
+          </div>
         </div>
       </footer>
 
@@ -347,6 +325,30 @@ export default function App() {
         isOpen={isColabModalOpen}
         onClose={() => setIsColabModalOpen(false)}
       />
+
+      {/* Sample Test Scenario Selection Modal */}
+      {isSampleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-5 space-y-4 border border-forensic-border shadow-xl">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-bold text-forensic-navy font-mono text-sm">Select Evaluation Test Scenario</h3>
+              <button onClick={() => setIsSampleModalOpen(false)} className="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {sampleImages.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => handleSampleClick(s)}
+                  className="p-3 text-left border rounded-lg hover:border-forensic-blue hover:bg-blue-50/50 transition-colors space-y-1"
+                >
+                  <div className="font-bold text-xs text-forensic-navy">{s.name}</div>
+                  <div className="text-[11px] text-slate-500 line-clamp-2">{s.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

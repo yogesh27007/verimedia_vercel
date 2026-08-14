@@ -1,55 +1,74 @@
 import React from 'react';
-import { ShieldCheck, Cpu, Code2, Sparkles, Terminal } from 'lucide-react';
+import { Cpu, Sliders, Database, ShieldCheck, Terminal } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 export default function Header({ onOpenColabModal }) {
   return (
-    <header className="border-b border-cyber-border bg-cyber-dark/80 backdrop-blur-md sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <header className="bg-white border-b border-forensic-border sticky top-0 z-40 shadow-sm">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         
-        {/* Brand logo & title */}
+        {/* Brand logo & Version badge */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyber-accent via-cyber-neon to-cyber-pink p-0.5 shadow-lg shadow-cyber-accent/20">
-            <div className="w-full h-full bg-cyber-dark rounded-[10px] flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-cyber-accent drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyber-accent bg-clip-text text-transparent">
-                VeriMedia
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-mono uppercase font-bold tracking-wider rounded bg-cyber-accent/10 text-cyber-accent border border-cyber-accent/30">
-                v1.0 Capstone
+          <div className="flex items-center space-x-2">
+            <h1 className="text-xl font-extrabold tracking-tight text-forensic-navy font-sans">
+              VeriMedia
+            </h1>
+            <Tooltip text="Capstone v1.0 Client-Side Media Forensics & Provenance Engine.">
+              <span className="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded bg-slate-100 text-slate-700 border border-slate-300 cursor-help">
+                V1.0 CAPSTONE
               </span>
-            </div>
-            <p className="text-xs text-slate-400 font-medium">
-              Client-Side Media Forensics & Provenance Engine
-            </p>
+            </Tooltip>
           </div>
         </div>
 
-        {/* Feature status badges & action buttons */}
-        <div className="flex items-center flex-wrap gap-2.5">
-          {/* $0 Guarantee Badge */}
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyber-green/10 text-cyber-green text-xs font-mono border border-cyber-green/30">
-            <Sparkles className="w-3.5 h-3.5 text-cyber-green" />
-            <span>$0 Backend Cost</span>
+        {/* Right Status Metrics */}
+        <div className="flex items-center space-x-6 text-xs font-mono">
+          
+          <Tooltip text="100% Client-Side Executable. All calculations run locally in your browser on your laptop GPU/CPU — zero server compute cost ($0.00).">
+            <div className="hidden sm:block text-right cursor-help">
+              <div className="text-[10px] text-forensic-slate uppercase font-bold tracking-wider">Backend Cost</div>
+              <div className="font-extrabold text-forensic-blue">$0.00</div>
+            </div>
+          </Tooltip>
+
+          <Tooltip text="Hardware acceleration active using WebGL 2.0 GPU fragment shaders and WebAssembly (WASM) tensors.">
+            <div className="hidden sm:block text-right cursor-help">
+              <div className="text-[10px] text-forensic-slate uppercase font-bold tracking-wider">WebGL 2.0/WASM</div>
+              <div className="font-extrabold text-forensic-blue">Active</div>
+            </div>
+          </Tooltip>
+
+          <Tooltip text="PyTorch training script ready for Google Colab free T4 GPU tier.">
+            <div className="hidden md:block text-right cursor-help">
+              <div className="text-[10px] text-forensic-slate uppercase font-bold tracking-wider">Colab Script</div>
+              <div className="font-semibold text-slate-600">Synced</div>
+            </div>
+          </Tooltip>
+
+          {/* Action / Colab Trigger Button */}
+          <Tooltip text="Click to view and copy the Google Colab PyTorch model training script.">
+            <button
+              onClick={onOpenColabModal}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded bg-forensic-bg hover:bg-slate-200 text-slate-700 font-semibold border border-forensic-border transition-colors text-xs"
+            >
+              <Terminal className="w-3.5 h-3.5 text-forensic-blue" />
+              <span>Colab Script</span>
+            </button>
+          </Tooltip>
+
+          {/* Icon Indicators */}
+          <div className="flex items-center space-x-2 text-slate-500 border-l border-forensic-border pl-4">
+            <Tooltip text="Hardware Acceleration Engine Active">
+              <Cpu className="w-4 h-4 hover:text-forensic-blue cursor-pointer" />
+            </Tooltip>
+            <Tooltip text="Dynamic ELA Amplification Slider Active">
+              <Sliders className="w-4 h-4 hover:text-forensic-blue cursor-pointer" />
+            </Tooltip>
+            <Tooltip text="Local Browser Tensor Memory Active">
+              <Database className="w-4 h-4 hover:text-forensic-blue cursor-pointer" />
+            </Tooltip>
           </div>
 
-          {/* WebGL/WASM Acceleration Badge */}
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyber-neon/10 text-cyber-accent text-xs font-mono border border-cyber-neon/30">
-            <Cpu className="w-3.5 h-3.5 text-cyber-accent" />
-            <span>WebGL 2.0 / WASM</span>
-          </div>
-
-          {/* Open Colab Modal Button */}
-          <button
-            onClick={onOpenColabModal}
-            className="cyber-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg bg-cyber-card hover:bg-cyber-border text-slate-200 text-xs font-semibold border border-cyber-border transition-colors"
-          >
-            <Terminal className="w-3.5 h-3.5 text-cyber-accent" />
-            <span>Colab Model Script ($0)</span>
-          </button>
         </div>
 
       </div>

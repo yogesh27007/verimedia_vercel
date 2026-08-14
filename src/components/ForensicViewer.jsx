@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Eye, Layers, Sliders, SplitSquareVertical, Flame, Activity, Cpu } from 'lucide-react';
+import { Eye, Download, Sliders } from 'lucide-react';
 
 export default function ForensicViewer({
   originalUrl,
   elaData,
   noiseData,
   aiData,
+  activeTab,
   onScaleChange,
-  elaScale
+  elaScale,
+  onExportReport
 }) {
-  const [activeTab, setActiveTab] = useState('ela'); // 'original' | 'ela' | 'noise' | 'ai' | 'split'
   const [splitPos, setSplitPos] = useState(50); // percentage for split screen
 
   const activeOverlayUrl = 
@@ -18,97 +19,35 @@ export default function ForensicViewer({
     activeTab === 'ai' ? aiData?.featureCanvasUrl :
     originalUrl;
 
+  const overlayLabel = 
+    activeTab === 'ela' ? 'ELA OVERLAY' :
+    activeTab === 'noise' ? 'NOISE MAP' :
+    activeTab === 'ai' ? 'AI FEATURE MAP' :
+    'ORIGINAL';
+
   return (
-    <div className="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
+    <div className="forensic-card p-4 space-y-4 flex-1">
       
-      {/* Top Overlay Mode Selector Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cyber-border pb-4">
-        
-        {/* Tab Buttons */}
-        <div className="flex items-center flex-wrap gap-1.5 bg-cyber-dark p-1 rounded-xl border border-cyber-border">
-          <button
-            onClick={() => setActiveTab('original')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'original'
-                ? 'bg-cyber-accent text-cyber-dark shadow-md shadow-cyber-accent/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Original</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ela')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'ela'
-                ? 'bg-cyber-yellow text-cyber-dark shadow-md shadow-cyber-yellow/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5" />
-            <span>WebGL ELA Shader</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('noise')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'noise'
-                ? 'bg-cyber-neon text-white shadow-md shadow-cyber-neon/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Noise Grid Matrix</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ai')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'ai'
-                ? 'bg-cyber-pink text-white shadow-md shadow-cyber-pink/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            <span>AI Feature Map</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('split')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'split'
-                ? 'bg-cyber-green text-cyber-dark shadow-md shadow-cyber-green/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <SplitSquareVertical className="w-3.5 h-3.5" />
-            <span>Split Loupe</span>
-          </button>
+      {/* Top Card Header */}
+      <div className="flex items-center justify-between border-b border-forensic-border pb-3">
+        <div className="flex items-center space-x-2">
+          <Eye className="w-4 h-4 text-forensic-navy" />
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-forensic-navy">
+            Evidence Viewer
+          </h2>
         </div>
 
-        {/* Dynamic ELA Scale Slider (Only active when ELA tab is selected) */}
-        {activeTab === 'ela' && (
-          <div className="flex items-center space-x-3 bg-cyber-dark/80 px-3.5 py-1.5 rounded-xl border border-cyber-border">
-            <Sliders className="w-4 h-4 text-cyber-yellow" />
-            <span className="text-xs font-mono text-slate-300">
-              ELA Amplification Scale: <strong className="text-cyber-yellow">{elaScale}x</strong>
-            </span>
-            <input
-              type="range"
-              min="1"
-              max="30"
-              value={elaScale}
-              onChange={(e) => onScaleChange(parseInt(e.target.value))}
-              className="w-24 accent-cyber-yellow cursor-pointer"
-            />
-          </div>
-        )}
-
+        <button
+          onClick={onExportReport}
+          className="flex items-center space-x-1.5 px-3 py-1 rounded bg-forensic-navy hover:bg-slate-800 text-white font-mono text-xs font-bold transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>EXPORT</span>
+        </button>
       </div>
 
       {/* Main Forensic Canvas Display Workspace */}
-      <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-xl overflow-hidden bg-black border border-cyber-border flex items-center justify-center">
+      <div className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-slate-900 border border-forensic-border flex items-center justify-center">
         
         {/* Standard Single Canvas View */}
         {activeTab !== 'split' ? (
@@ -119,8 +58,8 @@ export default function ForensicViewer({
               className="max-w-full max-h-full object-contain select-none"
             />
             {/* View Overlay Tag */}
-            <div className="absolute top-4 left-4 px-3 py-1 rounded-lg bg-cyber-dark/80 backdrop-blur-md border border-cyber-border text-xs font-mono text-cyber-accent">
-              Mode: {activeTab.toUpperCase()} OVERLAY
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-black/80 text-white text-[10px] font-mono font-bold tracking-widest border border-white/20">
+              {overlayLabel}
             </div>
           </div>
         ) : (
@@ -154,36 +93,51 @@ export default function ForensicViewer({
 
             {/* Split Divider Handle */}
             <div
-              className="absolute top-0 bottom-0 w-1 bg-cyber-accent shadow-[0_0_15px_#00f0ff]"
+              className="absolute top-0 bottom-0 w-0.5 bg-blue-500 shadow-[0_0_10px_#3b82f6]"
               style={{ left: `${splitPos}%` }}
             >
-              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-cyber-accent text-cyber-dark font-bold text-xs flex items-center justify-center shadow-lg">
+              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-md">
                 ↔
               </div>
             </div>
 
             {/* Split Screen Labels */}
-            <div className="absolute bottom-4 left-4 px-2.5 py-1 rounded bg-black/80 backdrop-blur text-[11px] font-mono text-slate-300">
-              Original Photo
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-black/80 text-white text-[10px] font-mono font-bold tracking-widest border border-white/20">
+              ORIGINAL
             </div>
-            <div className="absolute bottom-4 right-4 px-2.5 py-1 rounded bg-black/80 backdrop-blur text-[11px] font-mono text-cyber-yellow">
-              WebGL ELA Heatmap
+            <div className="absolute top-3 right-3 px-2.5 py-1 rounded bg-black/80 text-blue-400 text-[10px] font-mono font-bold tracking-widest border border-blue-400/40">
+              NOISE / ELA MAP
             </div>
           </div>
         )}
 
       </div>
 
-      {/* Legend / Guidance Footer */}
-      <div className="p-3 rounded-xl bg-cyber-dark/60 border border-cyber-border flex items-start space-x-3">
-        <div className="w-2 h-2 rounded-full bg-cyber-accent mt-1.5 shadow-[0_0_8px_#00f0ff]" />
-        <p className="text-xs text-slate-400 leading-relaxed">
-          {activeTab === 'ela' && (elaData?.limitationNotice || 'ELA highlights localized compression discrepancies. Bright uniform clusters indicate pasted objects.')}
-          {activeTab === 'noise' && (noiseData?.verdict || 'Laplacian matrix detects spatial sensor variance inconsistencies across image regions.')}
-          {activeTab === 'ai' && (aiData?.confidenceCategory || 'Spectrum classifier detects latent high-frequency generative patterns.')}
-          {activeTab === 'original' && 'Original unmodified input image rendering for baseline visual inspection.'}
-          {activeTab === 'split' && 'Drag divider horizontally to perform side-by-side microscopic comparison.'}
-        </p>
+      {/* Dynamic ELA Scale Slider (Only active when ELA tab is selected) */}
+      {activeTab === 'ela' && (
+        <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2 rounded-lg border border-forensic-border text-xs font-mono">
+          <div className="flex items-center space-x-2 text-slate-700">
+            <Sliders className="w-4 h-4 text-forensic-blue" />
+            <span>ELA Amplification Scale: <strong className="text-forensic-blue">{elaScale}x</strong></span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="30"
+            value={elaScale}
+            onChange={(e) => onScaleChange(parseInt(e.target.value))}
+            className="w-36 accent-forensic-blue cursor-pointer"
+          />
+        </div>
+      )}
+
+      {/* Guidance Footer */}
+      <div className="text-[11px] text-slate-500 font-mono bg-slate-50 p-2.5 rounded border border-slate-200">
+        {activeTab === 'ela' && (elaData?.limitationNotice || 'ELA highlights localized compression discrepancies. Bright uniform clusters indicate pasted objects.')}
+        {activeTab === 'noise' && (noiseData?.verdict || 'Laplacian matrix detects spatial sensor variance inconsistencies across image regions.')}
+        {activeTab === 'ai' && (aiData?.confidenceCategory || 'Spectrum classifier detects latent high-frequency generative patterns.')}
+        {activeTab === 'original' && 'Original unmodified input image rendering for baseline visual inspection.'}
+        {activeTab === 'split' && 'Drag divider horizontally to perform side-by-side microscopic comparison.'}
       </div>
 
     </div>
